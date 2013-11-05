@@ -3,10 +3,8 @@
 //#define TOUCH_SENSOR	IN_1	// touch sensor
 
 #define ULTRA			IN_1	// Ultrasonic
-#define MLEFT_POWER		50
-#define MRIGHT_POWER	50
-#define MOTOR_LEFT		OUT_B
-#define MOTOR_RIGHT		OUT_A
+#define MOTOR_LEFT		50
+#define MOTOR_RIGHT		50
 
 #define DISTANCE_THRESHOLD 25
 #define WHITE_THRESHOLD 40
@@ -14,39 +12,38 @@
 
 // Driving functions for convenience
 sub driveForward(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
+	OnFwd(OUT_A, MOTOR_RIGHT);
 	Wait(waitTime);
 }
 sub driveBackward(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
+	OnFwd(OUT_C, MOTOR_LEFT);
+	OnFwd(OUT_A, MOTOR_RIGHT);
 	Wait(waitTime);
 }
 sub turnLeft(int waitTime) {
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
-	OnRev(MOTOR_LEFT, MLEFT_POWER);
+	OnFwd(OUT_A, MOTOR_RIGHT);
+	OnRev(OUT_C, MOTOR_LEFT);
 	Wait(waitTime);
 }
 sub turnRight(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnRev(MOTOR_RIGHT, MRIGHT_POWER);
+	OnFwd(OUT_C, MOTOR_LEFT);
+	OnRev(OUT_A, MOTOR_RIGHT);
 	Wait(waitTime);
 }
 
 // Turns wide
 sub wideTurnForward(int waitTime, float lRatio, float rRatio) {
-	int motorLeft  = MLEFT_POWER*lRatio;
-	int motorRight = MRIGHT_POWER*rRatio;
-	OnFwd(MOTOR_LEFT, motorLeft);
-	OnFwd(MOTOR_RIGHT, motorRight);
+	int motorLeft  = MOTOR_LEFT*lRatio;
+	int motorRight = MOTOR_RIGHT*rRatio;
+	OnFwd(OUT_C, motorLeft);
+	OnFwd(OUT_A, motorRight);
 	Wait(waitTime);
 }
 sub wideTurnBackward(int waitTime, float lRatio, float rRatio) {
-	int motorLeft  = MLEFT_POWER*lRatio;
-	int motorRight = MRIGHT_POWER*rRatio;
-	OnRev(MOTOR_LEFT, motorLeft);
-	OnRev(MOTOR_RIGHT, motorRight);
+	int motorLeft  = MOTOR_LEFT*lRatio;
+	int motorRight = MOTOR_RIGHT*rRatio;
+	OnRev(OUT_C, motorLeft);
+	OnRev(OUT_A, motorRight);
 	Wait(waitTime);
 }
 
@@ -59,5 +56,7 @@ task main() {
 		//if (SensorUS(ULTRA) < DISTANCE_THRESHOLD) {
 		//	Wait(2000);
 		//}
+    driveForward(10);
+
 	}
 }
