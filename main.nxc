@@ -1,58 +1,10 @@
 // Settings
-//#define LIGHT_SENSOR	IN_4	// light sensor
-//#define TOUCH_SENSOR	IN_1	// touch sensor
 
-#define ULTRA			IN_1	// Ultrasonic
-#define MLEFT_POWER		50
-#define MRIGHT_POWER	50
-#define MOTOR_LEFT		OUT_B
-#define MOTOR_RIGHT		OUT_A
-
-#define DISTANCE_THRESHOLD 25
-#define WHITE_THRESHOLD 40
-#define BLACK_THRESHOLD 25
-
-// Driving functions for convenience
-sub driveForward(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
-	Wait(waitTime);
-}
-sub driveBackward(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
-	Wait(waitTime);
-}
-sub turnLeft(int waitTime) {
-	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
-	OnRev(MOTOR_LEFT, MLEFT_POWER);
-	Wait(waitTime);
-}
-sub turnRight(int waitTime) {
-	OnFwd(MOTOR_LEFT, MLEFT_POWER);
-	OnRev(MOTOR_RIGHT, MRIGHT_POWER);
-	Wait(waitTime);
-}
-
-// Turns wide
-sub wideTurnForward(int waitTime, float lRatio, float rRatio) {
-	int motorLeft  = MLEFT_POWER*lRatio;
-	int motorRight = MRIGHT_POWER*rRatio;
-	OnFwd(MOTOR_LEFT, motorLeft);
-	OnFwd(MOTOR_RIGHT, motorRight);
-	Wait(waitTime);
-}
-sub wideTurnBackward(int waitTime, float lRatio, float rRatio) {
-	int motorLeft  = MLEFT_POWER*lRatio;
-	int motorRight = MRIGHT_POWER*rRatio;
-	OnRev(MOTOR_LEFT, motorLeft);
-	OnRev(MOTOR_RIGHT, motorRight);
-	Wait(waitTime);
-}
+#include "drive.c"
 
 // Main loop
 task main() {
-	SetSensorLowspeed(ULTRA);
+	//	SetSensorLowspeed(ULTRA_SENSOR);
 	while (true) {
 		//turnLeft(10);
 		//Wait(1000);
@@ -61,3 +13,4 @@ task main() {
 		//}
 	}
 }
+
