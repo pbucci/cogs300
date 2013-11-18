@@ -7,8 +7,11 @@
 //
 
 #ifndef l3_ultra_h
+#define ARRAY_SIZE 100
 #define l3_ultra_h
 
-
+int maxMin();
+int scanAndRecord();
+int fuzzy(int num, int target, int range);
 
 #endif

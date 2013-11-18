@@ -1,16 +1,18 @@
 // Settings
 
 #include "drive.c"
+#include "ultra.c"
 
 // Main loop
 task main() {
-	//	SetSensorLowspeed(ULTRA_SENSOR);
-	while (true) {
-		//turnLeft(10);
-		//Wait(1000);
-		//if (SensorUS(ULTRA) < DISTANCE_THRESHOLD) {
-		//	Wait(2000);
-		//}
+	int max = maxMin();
+	int range = 10;
+	while(true) {
+		int reading = SensorUS(ULTRA_SENSOR);
+		if (fuzzy(reading,max,range)) {
+			break;
+		}
+		turnLeft(10);
+		Wait(1000);
 	}
 }
-
