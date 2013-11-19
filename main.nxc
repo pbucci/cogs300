@@ -1,18 +1,22 @@
-// Settings
-
 #include "drive.c"
 #include "ultra.c"
 
 // Main loop
 task main() {
+  SetSensorLowspeed(S1);
+  scanAndRecord();
+
 	int max = maxMin();
-	int range = 10;
+	int range = 7;
+
 	while(true) {
-		int reading = SensorUS(ULTRA_SENSOR);
+    ResetScreen();
+		int reading = SensorUS(S1);
+    NumOut(0,LCD_LINE1,reading);
 		if (fuzzy(reading,max,range)) {
-			break;
+		   Wait(5000);
 		}
-		turnLeft(10);
-		Wait(1000);
+    turnLeft(50);
+    Wait(50);
 	}
 }

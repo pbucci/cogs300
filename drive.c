@@ -12,21 +12,29 @@ void driveForward(int waitTime) {
 	OnFwd(MOTOR_LEFT, MLEFT_POWER);
 	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
 void driveBackward(int waitTime) {
 	OnFwd(MOTOR_LEFT, MLEFT_POWER);
 	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
 void turnLeft(int waitTime) {
 	OnFwd(MOTOR_RIGHT, MRIGHT_POWER);
 	OnRev(MOTOR_LEFT, MLEFT_POWER);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
 void turnRight(int waitTime) {
 	OnFwd(MOTOR_LEFT, MLEFT_POWER);
 	OnRev(MOTOR_RIGHT, MRIGHT_POWER);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
 
 // Turns wide
@@ -36,6 +44,8 @@ void wideTurnForward(int waitTime, float lRatio, float rRatio) {
 	OnFwd(MOTOR_LEFT, motorLeft);
 	OnFwd(MOTOR_RIGHT, motorRight);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
 void wideTurnBackward(int waitTime, float lRatio, float rRatio) {
 	int motorLeft  = MLEFT_POWER*lRatio;
@@ -43,4 +53,6 @@ void wideTurnBackward(int waitTime, float lRatio, float rRatio) {
 	OnRev(MOTOR_LEFT, motorLeft);
 	OnRev(MOTOR_RIGHT, motorRight);
 	Wait(waitTime);
+	Off(MOTOR_LEFT);
+	Off(MOTOR_RIGHT);
 }
