@@ -10,6 +10,7 @@
 //#include <stdio.h>
 
 int arr[ARRAY_SIZE];
+int mins[2];
 void arrayInit() {
 	int i;
 	for (i = 0; i < ARRAY_SIZE; i++) {
@@ -37,6 +38,30 @@ int maxMin() {
 	NumOut(0,LCD_LINE1,min);
 	Wait(5000);
 	return min;
+}
+
+void findmins() {
+	int i;
+	int mincount = 0;
+	int prevSlope;
+	for (i = 1; i < ARRAY_SIZE; i++) {
+		int first = arr[i];
+		int second = arr[i-1];
+		int slope = first - second;
+		if (slope < 0) {
+			prevSlope = -1;
+		}
+		if (slope > 0) {
+			prevSlope = 1;
+		}
+		if (slope != prevSlope && mincount < 2) {
+			mins[mincount] = i;
+			mincount++;
+		}
+	}
+	NumOut(0,LCD_LINE1,arr[mins[0]]);
+	NumOut(0,LCD_LINE2,arr[mins[1]]);
+	Wait(5000);
 }
 
 // Scans through the room, recording ultrasonic values

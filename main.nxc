@@ -5,15 +5,14 @@
 task main() {
   SetSensorLowspeed(S1);
   scanAndRecord();
-
-	int max = maxMin();
+  findmins();
 	int range = 7;
 
 	while(true) {
     ResetScreen();
 		int reading = SensorUS(S1);
     NumOut(0,LCD_LINE1,reading);
-		if (fuzzy(reading,max,range)) {
+		if (fuzzy(reading,arr[mins[0]],range) || fuzzy(reading,arr[mins[1]],range) ) {
 		   Wait(5000);
 		}
     turnLeft(50);
