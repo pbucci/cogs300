@@ -1,0 +1,193 @@
+#define LIGHT_LEFT  IN_2
+#define LIGHT_RIGHT IN_4
+#define SOUND       IN_3
+
+#define WHITE_LINE 60
+#define BLACK_SQUARE 40
+
+
+#define FOUND_BLACK \
+        (Sensor(LIGHT_LEFT) < BLACK_SQUARE || Sensor(LIGHT_RIGHT) < BLACK_SQUARE)
+#define FOUND_WHITE \
+        (Sensor(LIGHT_LEFT) > WHITE_LINE && Sensor(LIGHT_RIGHT) > WHITE_LINE)
+
+sub alignToGrid() {
+    while(true) {
+        OnFwd(OUT_AC,50);
+        if (Sensor(LIGHT_LEFT) > WHITE_LINE) {
+           Wait(5);
+           if (Sensor(LIGHT_RIGHT) > WHITE_LINE) {
+              //we're straight
+              Off(OUT_AC);
+              return;
+           }
+           OnRev(OUT_AC,50);
+           Wait(70);
+           OnFwd(OUT_C, 50);
+           Wait(50);
+        }
+        else if (Sensor(LIGHT_RIGHT) > WHITE_LINE) {
+           Wait(5);
+           if (Sensor(LIGHT_LEFT) > WHITE_LINE) {
+              //we're straight
+              Off(OUT_AC);
+              return;
+           }
+           OnRev(OUT_AC,50);
+           Wait(70);
+           OnFwd(OUT_A, 50);
+           Wait(50);
+        }
+        Wait(1);
+    }
+}
+sub rightTurn() {
+    Off(OUT_AC);
+    OnRev(OUT_C, 50);
+    Wait(DEGREE_IN_MS * 90);
+    Off(OUT_AC);
+    return;
+}
+
+sub leftTurn() {
+    Off(OUT_AC);
+    OnRev(OUT_A, 50);
+    Wait(DEGREE_IN_MS * 90);
+    Off(OUT_AC);
+    return;
+}
+
+sub nextRow() {
+    Off(OUT_AC);
+    OnFwd(OUT_AC, 50);
+    Wait(1100);
+    Off(OUT_AC);
+    return;
+}
+
+sub findCorner() {
+    rightTurn();
+    OnFwd(OUT_AC,50);
+    until(Sensor(LIGHT_RIGHT) > WHITE_LINE && Sensor(LIGHT_LEFT) > WHITE_LINE);
+    return;
+}
+
+sub search() {
+    int turnDir = 0;
+    while (true) {
+
+       alignToGrid();
+       if (turnDir % 2 == 0) {
+          rightTurn();
+          nextRow();
+          rightTurn();
+       } else {
+          leftTurn();
+          nextRow();
+          leftTurn();
+       }
+       OnFwd(OUT_AC, 50);
+       until(FOUND_BLACK || FOUND_WHITE);
+       if (FOUND_BLACK) {
+          Off(OUT_AC);
+          PlayToneEx(1200, 500, 70, false);
+          return;
+       } else {
+         alignToGrid();
+       }
+       ++turnDir;
+    }
+}
+
+sub scanForSound() {
+    int iterations = 40;
+    
+    int currVol = 0;
+    int maxVol = 0;
+    int maxVolAngle = 0;
+    ClearScreen();
+
+    for (int i = 0; i < iterations; i++) {
+        OnFwd(OUT_A, 50);
+        OnRev(OUT_C, 50);
+        Wait(100);
+        Off(OUT_AC);
+        Wait(300);
+        currVol = Sensor(SOUND);
+        if (currVol > maxVol) {
+           maxVol = currVol;
+           maxVolAngle = i;
+           TextOut(0,1, "max vol at");
+           NumOut(70,1,maxVolAngle);
+        }
+        Wait(300);
+    }
+    //reverse back to the max volume iteration
+    for (int j = 0; j < (iterations - maxVolAngle); j++) {
+        OnFwd(OUT_C, 50);
+        OnRev(OUT_A, 50);
+        Wait(100);
+        Off(OUT_AC);
+        Wait(100);
+    }
+    //initialize more accurate sweep: correct angle for margin of error
+    for (int i = 0; i < iterations / 12; i++) {
+        OnFwd(OUT_A, 50);
+        OnRev(OUT_C, 50);
+        Wait(100);
+        Off(OUT_AC);
+        Wait(100);
+    }
+    maxVol = 0;
+    maxVolAngle = 0;
+    //do sweep
+    for (int j = 0; j < iterations / 6; j++) {
+        OnFwd(OUT_C, 50);
+        OnRev(OUT_A, 50);
+        Wait(100);
+        Off(OUT_AC);
+        Wait(300);
+        currVol = Sensor(SOUND);
+        if (currVol > maxVol) {
+          maxVol = currVol;
+          maxVolAngle = j;
+        }
+        Wait(300);
+    }
+    //reverse to max volume angle again
+    for (int k = 0; k < ((iterations / 6) - maxVolAngle); k++) {
+        OnFwd(OUT_A, 50);
+        OnRev(OUT_C, 50);
+        Wait(100);
+        Off(OUT_AC);
+        Wait(100);
+    }
+    
+    Off(OUT_AC);
+    return;
+}
+task main() {
+     SetSensorLight(LIGHT_LEFT);
+     SetSensorLight(LIGHT_RIGHT);
+     SetSensorSound(SOUND, true);
+
+
+     //search
+     //alignToGrid();
+     //findCorner();
+     
+     //OnRev(OUT_AC,50);
+     //Wait(200);
+     //search();
+
+
+     //find sound source
+     // this does not terminate yet so it has to be
+     // manually stopped
+     while(true) {
+      scanForSound();
+      OnFwd(OUT_AC, 50);
+      Wait(2000);
+      Off(OUT_AC);
+     }
+}
