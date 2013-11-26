@@ -1,279 +1,237 @@
-#define LIGHT_LEFT   IN_2
-#define LIGHT_RIGHT  IN_2
+//sensors
+#define LIGHT        IN_2
 #define SOUND        IN_3
 #define SOUND_LEFT   IN_4
 #define TOUCH        IN_1
 
+//this may change based on motor power on the given day
 #define DEGREE_IN_MS 10
+
+//thresholds for various sensors
 #define WHITE_LINE   60
 #define BLACK_SQUARE 40
-
-
-#define FOUND_BLACK \
-        (Sensor(LIGHT_LEFT) < BLACK_SQUARE || Sensor(LIGHT_RIGHT) < BLACK_SQUARE)
-#define FOUND_WHITE \
-        (Sensor(LIGHT_LEFT) > WHITE_LINE && Sensor(LIGHT_RIGHT) > WHITE_LINE)
-
 #define SOUND_THRESHOLD 19
 
+//conditionals
+#define FOUND_BLACK \
+(Sensor(LIGHT) < BLACK_SQUARE)
+#define FOUND_WHITE \
+(Sensor(LIGHT) > WHITE_LINE)
 #define SOUND_HEARD \
-        (Sensor(SOUND) > SOUND_THRESHOLD)
+(Sensor(SOUND) > SOUND_THRESHOLD)
+#define SIGNAL_HEARD \
+(Sensor(SOUND_LEFT) > SOUND_THRESHOLD)
+#define TOUCHED \
+(Sensor(TOUCH) == 1)
 
-bool scanTime = false;
+// transition flags
+bool signalHeard = false;
 bool foundTarget = false;
 
+//Augments Wait() function with a quick exit if a touch event is sensed
 sub waitOrTouch(int time) {
-    int currTime = 0;
-    
-    while (currTime < time) {
-      Wait(1);
-      ++currTime;
-      if (Sensor(TOUCH) == 1) {
-        Stop(true);
-      }
+  int currTime = 0;
+
+  while (currTime < time) {
+    Wait(1);
+    ++currTime;
+    if (TOUCHED) {
+      Stop(true);
     }
-    return;
-}
-sub alignToGrid() {
-    int timeUntilScan = 5000;
-    while(true) {
-        OnFwd(OUT_A,70);
-        OnFwd(OUT_C,50);
-        if (Sensor(LIGHT_LEFT) > 15000) {
-           Wait(5);
-           //if (Sensor(LIGHT_RIGHT) > WHITE_LINE) {
-              //we're straight
-           //   Off(OUT_AC);
-           //   return;
-           //}
-           OnRev(OUT_AC,50);
-           Wait(70);
-           OnFwd(OUT_C, 50);
-           Wait(50);
-           timeUntilScan -= 120;
-        }
-        else if (Sensor(LIGHT_RIGHT) > WHITE_LINE) {
-           Wait(5);
-           //if (Sensor(LIGHT_LEFT) > WHITE_LINE) {
-              //we're straight
-           //   Off(OUT_AC);
-           //   return;
-           //}
-           OnRev(OUT_AC,50);
-           Wait(70);
-           OnFwd(OUT_A, 50);
-           Wait(50);
-           timeUntilScan -= 120;
-        }
-        
-        if (FOUND_BLACK) {
-           foundTarget = true;
-           return;
-        }
-        
-        if (timeUntilScan <= 0) {
-         Off(OUT_AC);
-         Wait(2000);
-         if (Sensor(SOUND_LEFT) > SOUND_THRESHOLD) {
-          scanTime = true;
-          return;
-         }
-         timeUntilScan = 5000;
-        }
-        Wait(1);
-        --timeUntilScan;
-    }
-}
-sub rightTurn() {
-    Off(OUT_AC);
-    OnRev(OUT_C, 50);
-    Wait(DEGREE_IN_MS * 90);
-    Off(OUT_AC);
-    return;
+  }
+  return;
 }
 
-sub leftTurn() {
-    Off(OUT_AC);
-    OnRev(OUT_A, 50);
-    Wait(DEGREE_IN_MS * 90);
-    Off(OUT_AC);
-    return;
-}
-
-sub nextRow() {
-    Off(OUT_AC);
-    OnFwd(OUT_AC, 50);
-    Wait(1100);
-    Off(OUT_AC);
-    return;
-}
-
-sub findCorner() {
-    rightTurn();
-    OnFwd(OUT_AC,50);
-    until(Sensor(LIGHT_RIGHT) > WHITE_LINE && Sensor(LIGHT_LEFT) > WHITE_LINE);
-    return;
-}
-
-sub search() {
-    int turnDir = 0;
-    while (true) {
-
-       alignToGrid();
-       if (turnDir % 2 == 0) {
-          rightTurn();
-          nextRow();
-          rightTurn();
-       } else {
-          leftTurn();
-          nextRow();
-          leftTurn();
-       }
-       OnFwd(OUT_AC, 50);
-       until(FOUND_BLACK || FOUND_WHITE || SOUND_HEARD);
-       if (FOUND_BLACK) {
-          Off(OUT_AC);
-          foundTarget = true;
-          return;
-       } else if (FOUND_WHITE) {
-         alignToGrid();
-       } else if (SOUND_HEARD) {
-         Off(OUT_AC);
-         Wait(2000);
-         if (SOUND_HEARD) {
-          scanTime = true;
-          return;
-         }
-       }
-       ++turnDir;
-    }
-}
-
-sub scanForSound() {
-    int iterations = 40;
-
-    int currVol = 0;
-    int maxVol = 0;
-    int maxVolAngle = 0;
-    ClearScreen();
-
-    for (int i = 0; i < iterations; i++) {
-        OnFwd(OUT_A, 70);
-        OnRev(OUT_C, 50);
-        waitOrTouch(100);
-        Off(OUT_AC);
-        waitOrTouch(300);
-        currVol = Sensor(SOUND);
-        if (currVol > maxVol) {
-           maxVol = currVol;
-           maxVolAngle = i;
-           TextOut(0,1, "max vol at");
-           NumOut(70,1,maxVolAngle);
-        }
-        waitOrTouch(300);
-    }
-    for (int j = 0; j < (iterations - maxVolAngle); j++) {
-        OnFwd(OUT_C, 50);
-        OnRev(OUT_A, 70);
-        waitOrTouch(100);
-        Off(OUT_AC);
-        waitOrTouch(100);
-    }
-    
-    for (int i = 0; i < iterations / 12; i++) {
-        OnFwd(OUT_A, 70);
-        OnRev(OUT_C, 50);
-        waitOrTouch(100);
-        Off(OUT_AC);
-        waitOrTouch(100);
-    }
-    maxVol = 0;
-    maxVolAngle = 0;
-    for (int j = 0; j < iterations / 6; j++) {
-        OnFwd(OUT_C, 50);
-        OnRev(OUT_A, 70);
-        waitOrTouch(100);
-        Off(OUT_AC);
-        waitOrTouch(300);
-        currVol = Sensor(SOUND);
-        if (currVol > maxVol) {
-          maxVol = currVol;
-          maxVolAngle = j;
-        }
-        waitOrTouch(300);
-    }
-    
-    for (int k = 0; k < ((iterations / 6) - maxVolAngle); k++) {
-        OnFwd(OUT_A, 70);
-        OnRev(OUT_C, 50);
-        waitOrTouch(100);
-        Off(OUT_AC);
-        waitOrTouch(100);
-    }
-    
-    Off(OUT_AC);
-    return;
-}
-
-sub getgroovy() {
-    OnFwd(OUT_AC,50);
-    Wait(500);
-    OnRev(OUT_AC,50);
-    Wait(500);
+// search algorithm: 
+// navigate the space until either:
+//  - the target is found, or
+//  - someone else has found the target
+sub searchForTarget() {
+    // 5 seconds until next listen
+  int timeUntilScan = 5000;
+  while(true) {
+        //take a curved path
     OnFwd(OUT_A,70);
-    OnRev(OUT_C,50);
-    Wait(1500);
     OnFwd(OUT_C,50);
-    OnRev(OUT_A,70);
-    Wait(1500);
-    
+
+        // if we reach the boundary, reverse and turn
+    if (FOUND_WHITE) {
+     Wait(5);
+     OnRev(OUT_AC,50);
+     Wait(70);
+     OnFwd(OUT_A, 50);
+     Wait(50);
+     timeUntilScan -= 125;
+   }
+
+        // if we find the target, terminate with the foundTarget flag 
+   if (FOUND_BLACK) {
+     foundTarget = true;
+     return;
+   }
+
+        // check if anyone else has found the target
+   if (timeUntilScan <= 0) {
+     Off(OUT_AC);
+     Wait(2000);
+         // listen for a sound with the motors off
+     if (SIGNAL_HEARD) {
+          // terminate with the signalHeard flag
+      signalHeard = true;
+      return;
+    }
+    timeUntilScan = 5000;
+  }
+  Wait(1);
+  --timeUntilScan;
+}
+}
+
+// scanning algorithm:
+//  - take sound measurements in a 360 degree circle around self
+//  - backtrack to the direction with the loudest sound
+//  - do another scan with a smaller arc (~60 degrees)
+//  - move towards the source, then repeat until colliding with something
+sub scanForSound() {
+    // number of measurements to take
+  int iterations = 40;
+
+  int currVol = 0;
+  int maxVol = 0;
+  int maxVolAngle = 0;
+    //clear robot display
+  ClearScreen();
+
+  for (int i = 0; i < iterations; i++) {
+        //turn slightly to the left, wait until the motors have stopped, then take a sound measurement
+    OnFwd(OUT_A, 70);
+    OnRev(OUT_C, 50);
+    waitOrTouch(100);
+    Off(OUT_AC);
+    waitOrTouch(300);
+        //measure the sound level in the directional mic
+    currVol = Sensor(SOUND);
+    if (currVol > maxVol) {
+           //if it's louder than the current loudest, save it
+     maxVol = currVol;
+     maxVolAngle = i;
+           //debugging information
+     TextOut(0,1, "max vol at");
+     NumOut(70,1,maxVolAngle);
+   }
+   waitOrTouch(300);
+ }
+    //reverse x iterations back to the loudest volume direction
+ for (int j = 0; j < (iterations - maxVolAngle); j++) {
+  OnFwd(OUT_C, 50);
+  OnRev(OUT_A, 70);
+  waitOrTouch(100);
+  Off(OUT_AC);
+  waitOrTouch(100);
+}
+
+    // the margin of error is around 30 degrees to each side, 
+    // so we move 30 degrees to one side and perform the scan from there
+for (int i = 0; i < iterations / 12; i++) {
+  OnFwd(OUT_A, 70);
+  OnRev(OUT_C, 50);
+  waitOrTouch(100);
+  Off(OUT_AC);
+  waitOrTouch(100);
+}
+maxVol = 0;
+maxVolAngle = 0;
+
+    // perform miniscan
+for (int j = 0; j < iterations / 6; j++) {
+  OnFwd(OUT_C, 50);
+  OnRev(OUT_A, 70);
+  waitOrTouch(100);
+  Off(OUT_AC);
+  waitOrTouch(300);
+  currVol = Sensor(SOUND);
+  if (currVol > maxVol) {
+    maxVol = currVol;
+    maxVolAngle = j;
+  }
+  waitOrTouch(300);
+}
+
+for (int k = 0; k < ((iterations / 6) - maxVolAngle); k++) {
+  OnFwd(OUT_A, 70);
+  OnRev(OUT_C, 50);
+  waitOrTouch(100);
+  Off(OUT_AC);
+  waitOrTouch(100);
+}
+
+Off(OUT_AC);
+return;
+}
+
+// do a dance
+sub getgroovy() {
+  OnFwd(OUT_AC,50);
+  Wait(500);
+  OnRev(OUT_AC,50);
+  Wait(500);
+  OnFwd(OUT_A,70);
+  OnRev(OUT_C,50);
+  Wait(1500);
+  OnFwd(OUT_C,50);
+  OnRev(OUT_A,70);
+  Wait(1500);
+
 }
 
 task main() {
-     SetSensorLight(LIGHT_LEFT);
-     SetSensorLight(LIGHT_RIGHT);
-     SetSensorSound(SOUND, true);
-     SetSensorSound(SOUND_LEFT, true);
-     SetSensorTouch(TOUCH);
 
-     int forwardTime;
-     bool touched = false;
+     //init sensors
+ SetSensorLight(LIGHT);
+ SetSensorSound(SOUND, true);
+ SetSensorSound(SOUND_LEFT, true);
+ SetSensorTouch(TOUCH);
 
-     scanTime = false;
-     foundTarget = false;
+     //init flags
+ signalHeard = false;
+ foundTarget = false;
 
-     alignToGrid();
-     //findCorner();
+     //perform search
+     // - this will terminate by setting one of the flags above
+ searchForTarget();
 
-     while (!scanTime && !foundTarget) {
-       search();
-     }
+     //debug info
+ if (signalHeard) {
+  TextOut(0,LCD_LINE2,"sound heard");
+}
+if (foundTarget) {
+  TextOut(0,LCD_LINE3, "target found");
+}
 
-     if (scanTime) {
-      TextOut(0,LCD_LINE2,"sound heard");
-     }
-     
-     if (foundTarget) {
-      TextOut(0,LCD_LINE3, "target found");
-     }
-     getgroovy();
-     Off(OUT_AC);
-     if (foundTarget) {
-      while (true) {
-            PlayToneEx(1000, 500, 4, true);
-      }
-     } else {
-     while(!touched) {
-      scanForSound();
-      //move until time is up, or something is hit
-      OnFwd(OUT_C, 50);
-      OnFwd(OUT_A, 60);
-      waitOrTouch(1500);
-      Off(OUT_AC);
-     }
-     }
-     Off(OUT_AC);
-     
+     //do a dance
+getgroovy();
+Off(OUT_AC);
 
+// if the target has been found, stop and infinitely loop that obnoxious signal tone
+if (foundTarget) {
+  while (true) {
+    PlayToneEx(1000, 500, 4, true);
+  }
+} else {
+  //otherwise transition into the scan
 
+  bool touched = false;
+  // while the source has not been found (via touch sensor)
+  while(!touched) {
+    scanForSound();
+      //move forward (compensating for motor torque)
+    OnFwd(OUT_C, 50);
+    OnFwd(OUT_A, 60);
+    waitOrTouch(1500);
+    Off(OUT_AC);
+     //repeat
+  }
+}
+//we're done!
+Off(OUT_AC);
 }
